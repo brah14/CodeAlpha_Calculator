@@ -11,6 +11,7 @@ let awaitingOperand = false; // true right after an operator is pressed
 let justEvaluated = false;   // true right after "="
 let hasError = false;
 let lastExpression = "";     // expression shown after "=" (or after an error)
+let repeatedOperation = null; // operation to reuse when "=" is pressed again
 
 /* ---------- Math ---------- */
 
@@ -64,6 +65,15 @@ function evaluateTokens(list) {
   return total;
 }
 
+function errorMessageFor(list) {
+  for (let i = 1; i < list.length; i += 2) {
+    if (list[i] === "/" && Number(list[i + 1]) === 0) {
+      return "Cannot divide by zero";
+    }
+  }
+  return "Result out of range";
+}
+
 /* ---------- Display ---------- */
 
 function format(value) {
@@ -104,13 +114,14 @@ function updateDisplay() {
   historyEl.scrollTop = historyEl.scrollHeight; // keep the latest part visible
 }
 
-function showError(expression) {
+function showError(expression, message = "Error") {
   lastExpression = expression;
-  current = "Error";
+  current = message;
   tokens = [];
   awaitingOperand = false;
   justEvaluated = false;
   hasError = true;
+  repeatedOperation = null;
   updateDisplay();
 }
 
@@ -123,6 +134,7 @@ function clearAll() {
   justEvaluated = false;
   hasError = false;
   lastExpression = "";
+  repeatedOperation = null;
   updateDisplay();
 }
 
@@ -130,6 +142,7 @@ function startFresh() {
   tokens = [];
   lastExpression = "";
   justEvaluated = false;
+  repeatedOperation = null;
 }
 
 function inputDigit(digit) {
@@ -187,16 +200,38 @@ function chooseOperator(op) {
 }
 
 function evaluate() {
-  if (hasError || justEvaluated || tokens.length === 0 || awaitingOperand) return;
+  if (hasError || tokens.length === 0 || awaitingOperand) {
+    if (!justEvaluated || !repeatedOperation || hasError) return;
+
+    const { operator, operand } = repeatedOperation;
+    const expression = `${format(current)} ${SYMBOLS[operator]} ${format(operand)} =`;
+    const result = compute(current, operand, operator);
+
+    if (result === null) {
+      const message = operator === "/" && Number(operand) === 0
+        ? "Cannot divide by zero"
+        : "Result out of range";
+      return showError(expression, message);
+    }
+
+    lastExpression = expression;
+    current = result;
+    updateDisplay();
+    return;
+  }
 
   const full = [...tokens, current];
   const expression = `${describe(full)} =`;
   const result = evaluateTokens(full);
 
-  if (result === null) return showError(expression);
+  if (result === null) return showError(expression, errorMessageFor(full));
 
   lastExpression = expression;
   current = result;
+  repeatedOperation = {
+    operator: full[full.length - 2],
+    operand: full[full.length - 1],
+  };
   tokens = [];
   justEvaluated = true;
   updateDisplay();

@@ -36,11 +36,16 @@ Open `index.html` in your browser. No build step needed.
 
 ## Live Demo
 
-Add your GitHub Pages or Netlify link here.
+- [Live demo](https://codealphacalculator-zeta.vercel.app)
+- [GitHub repository](https://github.com/brah14/CodeAlpha_Calculator)
 
-## Screenshots
+## Quick Test Checklist
 
-Add screenshots here.
+- `2 + 3 × 4 =` displays `14`.
+- `0.1 + 0.2 =` displays `0.3`.
+- `8 ÷ 0 =` displays a clear divide-by-zero message.
+- Press `=` again after `5 + 2 =` to get `9`.
+- Test mouse/touch controls and the keyboard shortcuts listed above.
 
 ## Author
 
